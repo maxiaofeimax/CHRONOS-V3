@@ -2,7 +2,7 @@ import os
 import dashscope
 from .utils import get_current_date_and_weekday
 from typing import Dict, List, Tuple
-from model import query_model
+from .model import query_model
 
 def ask_news_question(model: str, news: str, docs: list = [], questions: list = []):
     input_length = 29000

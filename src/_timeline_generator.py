@@ -3,7 +3,7 @@ import dashscope
 from .utils import get_current_date_and_weekday
 from typing import Dict, List, Tuple
 import json
-from model import query_model
+from .model import query_model
 
 def generate_timeline(model: str, news: str, docs: list):
     input_length = 30000
