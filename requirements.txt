@@ -1,0 +1,9 @@
+dashscope
+beautifulsoup4
+streamlit
+python-dotenv
+streamlit-vis-timeline
+tilse
+jsonlines
+rank-bm25
+transformers
