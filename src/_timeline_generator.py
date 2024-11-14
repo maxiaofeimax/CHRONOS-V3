@@ -7,7 +7,7 @@ from .model import query_model
 
 def generate_timeline(model: str, news: str, docs: list):
     input_length = 30000
-    raw_prompt = _build_raw_prompt(news, docs, enable_citation)
+    raw_prompt = _build_raw_prompt(news, docs)
     try:
         responses = query_model(model, raw_prompt)
         return post_process(responses)
@@ -19,7 +19,7 @@ def generate_timeline(model: str, news: str, docs: list):
 
 def merge_timeline(model: str, news: str, summaries: list, timelines: list):
     input_length = 30000
-    raw_prompt = _build_raw_prompt_merge(news, summaries, timelines, enable_citation)
+    raw_prompt = _build_raw_prompt_merge(news, summaries, timelines)
     try:
         responses = query_model(model, raw_prompt)
         return post_process(responses)
@@ -52,7 +52,7 @@ def _build_raw_prompt(news: str, docs: list) -> str:
     print(raw_prompt)
     return raw_prompt
 
-def _build_raw_prompt_merge(news: str, summaries: list, timelines, enable_citation: bool = False) -> str:
+def _build_raw_prompt_merge(news: str, summaries: list, timelines) -> str:
 
     raw_prompt = """<|im_start|>system\nYou are an experienced journalist writing a background story and building a timeline for the target news. \n\n按照时间顺序，合并已有的新闻摘要和时间线。
     ##新闻摘要: {summaries}
