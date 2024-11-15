@@ -12,10 +12,7 @@ def generate_timeline(model: str, news: str, docs: list):
         responses = query_model(model, raw_prompt)
         return post_process(responses)
     except Exception as e:
-        if responses.status_code == 200:
-            raise ValueError(f'Call dashscope failed: {str(e)}') 
-        else:
-            raise ValueError(f'Call dashscope failed: Request timed out, please try again later or decrease the amount of referenced news articles.') 
+        raise ValueError(f'Call dashscope failed: {str(e)}.\nPlease try again later or decrease the amount of referenced news articles.') 
 
 def merge_timeline(model: str, news: str, summaries: list, timelines: list):
     input_length = 30000
