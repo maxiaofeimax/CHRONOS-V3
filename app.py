@@ -20,17 +20,16 @@ st.title('🗓️ CHRONOS新闻时间线生成')
 
 chat_model = os.getenv('MODEL_NAME')
 
-
 examples = [
-    '国足1-0巴林队'
-    '黄金价格',
+    '国足1-0巴林队',
+    '小米15发布',
     '中国探月工程'
 ]
 
 with st.sidebar:
     MAX_ROUNDS = st.number_input('提问轮数：', min_value=0, max_value=10, value=2, step=1)
     # n_max_query = st.number_input('问题拆解上限：', min_value=1, max_value=6, value=3, step=1)
-    n_max_doc = st.number_input('引用资料上限：', min_value=1, max_value=50, value=15, step=5)
+    n_max_doc = st.number_input('引用资料上限：', min_value=1, max_value=50, value=10, step=5)
     read_page = st.checkbox('阅读新闻资料全文', False)
     selected_example = st.sidebar.selectbox('示例：', examples)
 
