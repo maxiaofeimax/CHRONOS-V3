@@ -53,9 +53,8 @@ def rewrite_query(query: str, n_max_query: int = 5) -> List[str]:
         response = response.json()['output']['choices'][0]['message']['tool_calls'][0]['function']['arguments']
         queries = eval(response)["queries"]
     except:
-        breakpoint()
+        print(response.json())
         queries = [query]
-        # print(response.json(), query)
 
     return list(set(queries[:n_max_query]))
 
