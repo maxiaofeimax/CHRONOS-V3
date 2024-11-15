@@ -22,8 +22,7 @@ chat_model = os.getenv('MODEL_NAME')
 
 
 examples = [
-    '特朗普再次当选美国总统',
-    '李子柒回归',
+    '国足1-0巴林队'
     '黄金价格',
     '中国探月工程'
 ]
@@ -148,11 +147,12 @@ def news_timeline_generation(input_text):
         st.warning(debug_info)
 
     tic = time.time()
-    st.markdown(f'**合并时间线中...**')
     if MAX_ROUNDS > 1:
+        st.markdown(f'**合并时间线中...**')
         summary, news_timeline = merge_timeline(model=chat_model, news=input_text, summaries=summaries, timelines=timelines)
-    else:
-        summary, news_timeline = generate_timeline(model=chat_model, news=input_text, docs=doc_list_filtered)
+    # else:
+    #     st.markdown(f'**整理时间线中...**')
+    #     summary, news_timeline = generate_timeline(model=chat_model, news=input_text, docs=doc_list_filtered)
     generate_time += time.time() - tic
 
     return summary, news_timeline
