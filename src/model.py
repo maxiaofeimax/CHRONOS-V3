@@ -6,23 +6,30 @@ import os
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 def query_model(model: str, raw_prompt: str):
-    if 'qwen' in model:
-        responses = query_qwen(model, raw_prompt)
-    elif 'gpt' in model:
-        responses = query_gpt(model, raw_prompt)
+    responses = None
+    try_time = 0
+    while (responses == None and try_time < 3):
+        if 'qwen' in model:
+            responses = query_qwen(model, raw_prompt)
+        elif 'gpt' in model:
+            responses = query_gpt(model, raw_prompt)
+        try_time += 1
     return responses
 
 def query_qwen(model: str, raw_prompt: str):
-    dashscope.base_http_api_url=os.getenv('DASHSCOPE_BASE_HTTP')
-    dashscope.base_websocket_api_url=os.getenv('DASHSCOPE_BASE_WEBSOCKET')
-    resp = dashscope.Generation.call(
-        api_key=os.getenv('DASHSCOPE_API_KEY'),
-        model=model,
-        prompt=raw_prompt,
-        use_raw_prompt=True
-    )
-    responses = resp['output']['text']
-    return responses
+    try:
+        dashscope.base_http_api_url=os.getenv('DASHSCOPE_BASE_HTTP')
+        dashscope.base_websocket_api_url=os.getenv('DASHSCOPE_BASE_WEBSOCKET')
+        resp = dashscope.Generation.call(
+            api_key=os.getenv('DASHSCOPE_API_KEY'),
+            model=model,
+            prompt=raw_prompt,
+            use_raw_prompt=True
+        )
+        responses = resp['output']['text']
+        return responses
+    except:
+        print(resp)
 
 def query_gpt(model: str, raw_prompt: str):
     headers = {
