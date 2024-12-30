@@ -12,10 +12,12 @@ from src._timeline_generator import generate_timeline, merge_timeline
 import jsonlines
 from streamlit_timeline import st_timeline
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 
 load_dotenv()
-
+st.set_page_config(layout="wide")
 st.title('🗓️ CHRONOS新闻时间线生成')
 
 chat_model = os.getenv('MODEL_NAME')
@@ -43,7 +45,7 @@ def news_timeline_generation(input_text):
     }
     """
     news_timeline = []
-    search_engine = 'bing'
+    search_engine = 'google'
     n_max_query = 3
     doc_list_all = search([input_text], 10, search_engine)    # 先直接按keywords进行搜索
     with st.popover(f'直接搜索目标新闻，引用 {len(doc_list_all)} 篇资料作为参考'):
@@ -56,10 +58,12 @@ def news_timeline_generation(input_text):
     summaries = []
     timelines = []
 
+    main_cols = st.columns(MAX_ROUNDS)
     for i in range(1, MAX_ROUNDS + 1):
         question_time, rewrite_time, search_time, generate_time, read_time = 0,0, 0, 0, 0
         tic0 = tic = time.time()
-        st.markdown(f'**第{i}次提问...**')
+        with main_cols[i-1]:
+            st.markdown(f'**第{i}次提问...**')
         question_list = ask_news_question(model=chat_model, news=input_text, docs=doc_list_all, questions=question_list_all)  # question-based news background decomposition
         question_time += time.time() - tic
         # st.success('\n'.join(f'- {q}' for q in question_list))
@@ -68,13 +72,29 @@ def news_timeline_generation(input_text):
         tic = time.time()
         query_list = {}
         queries = []
-        for question in question_list:
-            print(question)
-            query_gen = rewrite_query(question, n_max_query) # 改写
-            # query_gen = [question]
-            print(query_gen)
+        # for question in question_list:
+        #     print(question)
+        #     query_gen = rewrite_query(question, n_max_query) # 改写
+        #     # query_gen = [question]
+        #     print(query_gen)
+        #     query_list[question] = list(set(query_gen))
+        #     queries += query_gen
+        # question_list_all += queries
+        def process_question(question):
+            query_gen = rewrite_query(question, n_max_query)  # 改写
             query_list[question] = list(set(query_gen))
-            queries += query_gen
+            return query_gen
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_question = {executor.submit(process_question, question): question for question in question_list}
+            for future in as_completed(future_to_question):
+                question = future_to_question[future]
+                try:
+                    query_gen = future.result()
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (question, exc))
+                else:
+                    queries.extend(query_gen)
         question_list_all += queries
         rewrite_time += time.time() - tic
         
@@ -86,28 +106,33 @@ def news_timeline_generation(input_text):
             query_show += f'- {question}\n'
             for q in query_list[question]:
                 query_show += f'    + {q}\n'
-        st.success(query_show.strip('\n'))
+        with main_cols[i-1]:
+            with st.expander("点击展开/折叠提问", expanded=True):
+                st.success(query_show.strip('\n'))
 
         tic = time.time()
-        doc_list = search(list(set(queries)), n_max_doc, search_engine) # 搜索
+        doc_list = search(list(set(queries)), n_max_doc, search_engine, read_page) # 搜索
         search_time += time.time() - tic
 
-    
-        with st.popover(f'引用 {len(doc_list)} 篇资料作为参考'):
-            col1, col2 = st.columns([1, 2])
-            with col1:
-                st.markdown('\n\n'.join([f'{d["title"]}' for d in doc_list]))
-            with col2:
-                st.markdown('\n\n'.join([f'{d["url"]}' for d in doc_list]))
+        with main_cols[i-1]:
+            with st.popover(f'引用 {len(doc_list)} 篇资料作为参考'):
+                col1, col2 = st.columns([1, 2])
+                with col1:
+                    st.markdown('\n\n'.join([f'{d["title"]}' for d in doc_list]))
+                with col2:
+                    st.markdown('\n\n'.join([f'{d["url"]}' for d in doc_list]))
 
-        if read_page:
+        
+        if read_page and search_engine != 'google':
             tic = time.time()
-            with st.spinner('正在阅读网页...'):
-                if search_engine == 'bing':
-                    doc_list = read_pages(doc_list, "jina")   # read page
+            with main_cols[i-1]:
+                with st.spinner('正在阅读网页...'):
+                    if search_engine == 'bing':
+                        doc_list = read_pages(doc_list, "jina")   # read page
             
             if len(doc_list) == 0:
-                st.error('readpage结果为空，请联系 @葳栖 排查问题！')
+                with main_cols[i-1]:
+                    st.error('readpage结果为空!')
                 # return
                 retry = 0
                 while len(doc_list) == 0 and retry < 5:
@@ -116,7 +141,8 @@ def news_timeline_generation(input_text):
                         doc_list = read_pages(doc_list, "jina")   # read page
                     retry += 1
                 if retry == 5:
-                    st.warning("READ PAGE FAILURE!!!")
+                    with main_cols[i-1]:
+                        st.warning("READ PAGE FAILURE!!!")
             read_time += time.time() - tic
 
         doc_list_filtered = []
@@ -128,10 +154,12 @@ def news_timeline_generation(input_text):
                 doc_list_all.append(d)
             if d not in doc_list_filtered:
                 doc_list_filtered.append(d)
-        st.success(str(len(doc_list_all)) + '篇网页已搜索')
+        with main_cols[i-1]:
+            st.success(str(len(doc_list_all)) + '篇网页已搜索')
         
         tic = time.time()
-        st.markdown(f'**第{i}轮时间线生成中...**')
+        with main_cols[i-1]:
+            st.markdown(f'**第{i}轮时间线生成中...**')
         summary, news_timeline = generate_timeline(model=chat_model, news=input_text, docs=doc_list_filtered)    # generate timeline
         summaries.append(summary)
         timelines.append(news_timeline)
@@ -141,9 +169,10 @@ def news_timeline_generation(input_text):
         debug_info += f'\n- 问题改写耗时：{rewrite_time:.3f} s'
         debug_info += f'\n- 新闻搜索耗时：{search_time:.3f} s'
         debug_info += f'\n- 时间线生成耗时：{generate_time:.3f} s'
-        if read_page:
+        if read_page and search_engin != 'google':
             debug_info += f'\n- 新闻全文阅读耗时：{read_time:.3f} s'
-        st.warning(debug_info)
+        with main_cols[i-1]:
+            st.warning(debug_info)
 
     tic = time.time()
     if MAX_ROUNDS > 1:
