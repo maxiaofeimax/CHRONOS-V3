@@ -4,6 +4,7 @@ import requests
 import concurrent.futures
 import logging
 from typing import Dict, List
+import time
 
 
 def search(query_list: List[str], n_max_doc: int = 20, search_engine: str = 'google', freshness: str = '', read_page: bool = True) -> List[Dict[str, str]]:

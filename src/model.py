@@ -8,7 +8,7 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 def query_model(model: str, raw_prompt: str):
     responses = None
     try_time = 0
-    while (responses == None and try_time < 3):
+    while (responses == None and try_time < 15):
         if 'qwen' in model:
             responses = query_qwen(model, raw_prompt)
         elif 'gpt' in model:
