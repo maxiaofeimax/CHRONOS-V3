@@ -169,7 +169,7 @@ def news_timeline_generation(input_text):
         debug_info += f'\n- 问题改写耗时：{rewrite_time:.3f} s'
         debug_info += f'\n- 新闻搜索耗时：{search_time:.3f} s'
         debug_info += f'\n- 时间线生成耗时：{generate_time:.3f} s'
-        if read_page and search_engin != 'google':
+        if read_page and search_engine != 'google':
             debug_info += f'\n- 新闻全文阅读耗时：{read_time:.3f} s'
         with main_cols[i-1]:
             st.warning(debug_info)
