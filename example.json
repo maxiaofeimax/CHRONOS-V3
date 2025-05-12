@@ -1,0 +1,32 @@
+{
+  "title": {
+    "text": {
+      "headline": "时间线示例",
+      "text": "这是一个使用 streamlit-timeline 创建的时间线示例。"
+    }
+  },
+  "events": [
+    {
+      "start_date": {
+        "year": "2020",
+        "month": "01",
+        "day": "01"
+      },
+      "text": {
+        "headline": "事件一",
+        "text": "事件一的详细描述。"
+      }
+    },
+    {
+      "start_date": {
+        "year": "2021",
+        "month": "06",
+        "day": "15"
+      },
+      "text": {
+        "headline": "事件二",
+        "text": "事件二的详细描述。"
+      }
+    }
+  ]
+}
